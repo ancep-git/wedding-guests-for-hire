@@ -1,0 +1,10 @@
+{
+  "name": "friends-included-finance",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "node tools/dev-server.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

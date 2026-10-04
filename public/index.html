@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Friends Included Finance</title>
+<meta name="description" content="Friends Included Ltd finance system: Telegram + Supabase + Vercel + Google Sheets. Day 4 homework by Ance Petrovica.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💍</text></svg>">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="inner">
+    <div>
+      <h1>Friends Included Ltd · finance system</h1>
+      <p class="sub">All friendships expire at checkout. · Day 4 homework by <strong id="student">Ance Petrovica</strong></p>
+    </div>
+    <nav class="links">
+      <a id="link-bot" href="#" target="_blank" rel="noopener">Telegram bot</a>
+      <a id="link-sheet" href="#" target="_blank" rel="noopener">Google Sheet</a>
+      <a id="link-github" href="#" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="rolebar">
+  <div class="inner">
+    <label for="role">Demonstration role</label>
+    <select id="role"></select>
+    <span id="role-note" class="muted"></span>
+    <button id="refresh" class="ghost" type="button">Refresh</button>
+  </div>
+</div>
+
+<main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="warn"></div>
+
+  <details class="howto" id="howto">
+    <summary>How to use this system</summary>
+    <ol>
+      <li><strong>Choose a demonstration role</strong> above. Every action is re-checked on the server for that role — hidden buttons are not the only protection.</li>
+      <li><strong>Enter transactions</strong> under <em>New entry</em>: Richard, Anastasia and Jean-Claude enter sales with a proposed commission split (Richard / Anastasia / Jean-Claude); Kevin enters expenses with a proposed allocation.</li>
+      <li><strong>Or use Telegram</strong>: open the bot, press Start, and ask Svetlana (Manager setup below) to link your Telegram user ID to an employee. Then send for example<br>
+        <code>/sale S01 | Olivia Rose | A | One proud uncle and an emotional grandmother | 1000 | 50/30/20</code><br>
+        <code>/expense E01 | Rented suit and fake pearl necklace for the relatives | Materials | 120 | A</code></li>
+      <li><strong>Approve decisions</strong> as Svetlana under <em>Manager decisions</em>: keep or change the commission split and approve a sale; confirm or change an expense allocation. The submitter is notified on Telegram.</li>
+      <li><strong>Results</strong> (Svetlana's view) update immediately. Records are copied automatically to the Google Sheet (tabs <em>Sales</em> and <em>Expenses</em>); if a copy or a notification fails, the record shows it with a Retry button.</li>
+    </ol>
+  </details>
+
+  <section id="dash-sec" hidden>
+    <h2>Financial results</h2>
+    <p class="muted">Approved sales only. Pending sales are excluded from income and commission; every recorded expense reduces company result.</p>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid-dash">
+      <div class="card"><h3>Results by project</h3><div class="scroll" id="results"></div><p class="recon" id="recon"></p></div>
+      <div class="card"><h3>Commission earned by salesperson</h3><div class="scroll" id="commissions"></div></div>
+    </div>
+  </section>
+
+  <section id="decide-sec">
+    <h2>Manager decisions</h2>
+    <p class="muted" id="decide-note"></p>
+    <div class="grid2">
+      <div><h3>Sales pending approval</h3><div id="pending-sales"></div></div>
+      <div><h3>Expenses awaiting allocation</h3><div id="pending-exp"></div></div>
+    </div>
+  </section>
+
+  <section id="entry-sec">
+    <h2>New entry</h2>
+    <p class="muted"><label><input type="checkbox" id="show-all-forms"> Show both forms for every role (to test that the server refuses entries the role may not make)</label></p>
+    <div class="grid2">
+      <form id="sale-form" class="card" novalidate>
+        <h3>Sale <span class="muted" id="sale-who"></span></h3>
+        <div class="row2">
+          <label>Reference <input name="ref" placeholder="S01" autocomplete="off"></label>
+          <label>Project
+            <select name="project"><option value="">Choose…</option><option value="A">A — Respectable Relatives</option><option value="B">B — Drunk University Friends</option></select>
+          </label>
+        </div>
+        <label>Customer <input name="customer" placeholder="Olivia Rose"></label>
+        <label>Description <input name="description" placeholder="One proud uncle and an emotional grandmother"></label>
+        <label>Amount (€) <input name="amount" inputmode="decimal" placeholder="1000"></label>
+        <fieldset>
+          <legend>Proposed commission split (%) — must total 100</legend>
+          <div class="row3">
+            <label>Richard <input name="richard" inputmode="decimal" placeholder="50"></label>
+            <label>Anastasia <input name="anastasia" inputmode="decimal" placeholder="30"></label>
+            <label>Jean-Claude <input name="jeanclaude" inputmode="decimal" placeholder="20"></label>
+          </div>
+          <p class="muted small" id="sale-preview"></p>
+        </fieldset>
+        <button type="submit">Submit sale</button>
+      </form>
+
+      <form id="expense-form" class="card" novalidate>
+        <h3>Expense <span class="muted" id="exp-who"></span></h3>
+        <label>Reference <input name="ref" placeholder="E01" autocomplete="off"></label>
+        <label>Description <input name="description" placeholder="Rented suit and fake pearl necklace for the relatives"></label>
+        <div class="row2">
+          <label>Category
+            <select name="category"><option value="">Choose…</option><option>Materials</option><option>Travel</option><option>Other</option></select>
+          </label>
+          <label>Amount (€) <input name="amount" inputmode="decimal" placeholder="120"></label>
+        </div>
+        <label>Proposed allocation
+          <select name="allocation"><option value="">Choose…</option><option value="A">A — Respectable Relatives</option><option value="B">B — Drunk University Friends</option><option value="OVERHEAD">Company overhead</option></select>
+        </label>
+        <button type="submit">Submit expense</button>
+      </form>
+    </div>
+    <p class="muted" id="entry-none" hidden>Svetlana does not make routine entries. Switch to a salesperson or Kevin, or tick the box above to test the refusal.</p>
+  </section>
+
+  <section id="records-sec">
+    <h2 id="records-h">Records</h2>
+    <h3>Sales</h3>
+    <div class="scroll"><table id="sales-table"></table></div>
+    <h3>Expenses</h3>
+    <div class="scroll"><table id="exp-table"></table></div>
+  </section>
+
+  <section id="setup-sec" hidden>
+    <h2>Manager setup</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Link Telegram users to employees</h3>
+        <p class="muted small">Each person first opens the bot and presses <em>Start</em>; the bot replies with their Telegram user ID and they appear here. Bot submissions keep the chat they came from for later notifications, even if the link changes afterwards.</p>
+        <div class="scroll"><table id="tg-table"></table></div>
+        <form id="link-form" class="inline">
+          <input name="userId" placeholder="Telegram user ID" inputmode="numeric">
+          <select name="employeeId"></select>
+          <button type="submit">Link</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Integrations</h3>
+        <ul id="integrations" class="plain"></ul>
+        <p><button type="button" id="webhook-btn" class="ghost">Register Telegram webhook</button></p>
+        <h3>Failure testing</h3>
+        <label class="check"><input type="checkbox" id="sim-sheets"> Simulate Google Sheets outage</label>
+        <label class="check"><input type="checkbox" id="sim-tg"> Simulate Telegram delivery failure</label>
+        <p class="muted small">While on, new saves and decisions are still recorded in Supabase but show “Sync failed” / “Notification failed”. Switch off and press Retry on the record.</p>
+        <div id="reset-box" hidden>
+          <h3>Practice data</h3>
+          <button type="button" id="reset-btn" class="danger">Delete all transactions</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer><div class="inner muted small">Fictional company, people and transactions. Supabase is the source of truth; the Google Sheet is a read-only copy. All amounts in euros, no VAT.</div></footer>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
