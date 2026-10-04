@@ -351,6 +351,18 @@ $('#webhook-info-btn').addEventListener('click', async (e) => {
       + `Waiting messages: ${r.pending} · ${ok ? pill('ok', 'working') : pill('bad', 'not working')}`;
   } catch (err) { toast(err.message, false); } finally { b.disabled = false; }
 });
+$('#sheets-info-btn').addEventListener('click', async (e) => {
+  const b = e.currentTarget; b.disabled = true;
+  try {
+    const r = await api('sheets_info');
+    $('#sheets-info').innerHTML = `Robot email: <strong>${esc(r.email)}</strong><br>Sheet ID: ${esc(r.spreadsheetId)}<br>`
+      + (r.ok
+        ? `Spreadsheet: <strong>${esc(r.title)}</strong> · tabs: ${esc(r.tabs.join(', '))} ${pill('ok', 'connected')}<br><a href="https://docs.google.com/spreadsheets/d/${encodeURIComponent(r.spreadsheetId)}/edit" target="_blank" rel="noopener">Open this spreadsheet</a>`
+        : `<span class="changed">${esc(r.error)}</span> ${pill('bad', 'not connected')}`);
+  } catch (err) {
+    $('#sheets-info').innerHTML = `<span class="changed">${esc(err.message)}</span>`;
+  } finally { b.disabled = false; }
+});
 $('#reset-btn').addEventListener('click', (e) => {
   if (prompt('This deletes ALL transactions in Supabase and the Google Sheet. Type DELETE to confirm.') !== 'DELETE') return;
   act(e.currentTarget, () => api('reset_all'), 'All transactions deleted.');

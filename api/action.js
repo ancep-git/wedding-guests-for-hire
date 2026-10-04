@@ -28,6 +28,7 @@ export default async function handler(req, res) {
         result = await service.registerWebhook(actor, prod ? `https://${prod}` : `${proto}://${host}`, webhookSecret);
         break;
       }
+      case 'sheets_info': result = await service.sheetsInfo(actor); break;
       case 'webhook_info': result = await service.webhookInfo(actor); break;
       case 'reset_all': result = await service.resetAll(actor); break;
       default: return send(res, 400, { ok: false, code: 'invalid', error: 'Unknown action.' });
