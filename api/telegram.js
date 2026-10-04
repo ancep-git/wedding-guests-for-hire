@@ -8,13 +8,18 @@ export default async function handler(req, res) {
   if (!webhookSecret || req.headers['x-telegram-bot-api-secret-token'] !== webhookSecret) {
     return send(res, 401, { ok: false });
   }
+  let msg = null;
   try {
     const update = await readJson(req);
-    const msg = update.message;
+    msg = update.message;
     const reply = await service.handleTelegramMessage(msg);
     if (reply && telegram) await telegram.sendMessage(msg.chat.id, reply);
   } catch (e) {
     console.error('Telegram update failed', e);
+    // Tell the sender instead of staying silent (nothing was confirmed as saved).
+    if (telegram && msg?.chat?.id) {
+      await telegram.sendMessage(msg.chat.id, `⚠️ Server error — nothing was recorded.\n${String(e.message).slice(0, 300)}`).catch(() => {});
+    }
   }
   // Always 200 so Telegram does not re-deliver the same update.
   send(res, 200, { ok: true });
