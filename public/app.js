@@ -91,7 +91,7 @@ function statusPill(t) {
 }
 function syncCell(t) {
   const p = t.sync_status === 'synced' ? pill('ok', 'Synced') : t.sync_status === 'failed' ? pill('bad', 'Sync failed') : pill('warn', 'Sync pending');
-  const retry = t.sync_status !== 'synced' ? ` <button class="small ghost" data-retry-sync="${esc(t.ref)}">Retry</button>` : '';
+  const retry = ` <button class="small ghost" data-retry-sync="${esc(t.ref)}">${t.sync_status === 'synced' ? 'Re-sync' : 'Retry'}</button>`;
   const err = t.sync_status === 'failed' && t.sync_error ? `<div class="small muted">${esc(t.sync_error)}</div>` : '';
   return p + retry + err;
 }
