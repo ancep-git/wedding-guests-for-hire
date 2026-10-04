@@ -341,6 +341,16 @@ $('#link-form').addEventListener('submit', (e) => {
 $('#sim-sheets').addEventListener('change', (e) => act(null, () => api('set_simulation', { key: 'simulate_sheets_failure', value: e.target.checked }), `Sheets outage simulation ${e.target.checked ? 'ON' : 'off'}.`));
 $('#sim-tg').addEventListener('change', (e) => act(null, () => api('set_simulation', { key: 'simulate_telegram_failure', value: e.target.checked }), `Telegram failure simulation ${e.target.checked ? 'ON' : 'off'}.`));
 $('#webhook-btn').addEventListener('click', (e) => act(e.currentTarget, () => api('register_webhook'), (r) => `Webhook registered for @${r.bot}: ${r.url}`));
+$('#webhook-info-btn').addEventListener('click', async (e) => {
+  const b = e.currentTarget; b.disabled = true;
+  try {
+    const r = await api('webhook_info');
+    const ok = r.url && !r.lastError;
+    $('#webhook-info').innerHTML = `Bot: <strong>@${esc(r.bot)}</strong><br>Webhook: ${r.url ? esc(r.url) : '<span class="changed">not registered — press Register Telegram webhook</span>'}<br>`
+      + (r.lastError ? `<span class="changed">Last delivery error (${esc(time(r.lastErrorAt))}): ${esc(r.lastError)}</span><br>` : '')
+      + `Waiting messages: ${r.pending} · ${ok ? pill('ok', 'working') : pill('bad', 'not working')}`;
+  } catch (err) { toast(err.message, false); } finally { b.disabled = false; }
+});
 $('#reset-btn').addEventListener('click', (e) => {
   if (prompt('This deletes ALL transactions in Supabase and the Google Sheet. Type DELETE to confirm.') !== 'DELETE') return;
   act(e.currentTarget, () => api('reset_all'), 'All transactions deleted.');

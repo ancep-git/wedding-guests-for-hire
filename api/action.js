@@ -20,11 +20,15 @@ export default async function handler(req, res) {
       case 'link_telegram': result = await service.linkTelegram(actor, b.userId, b.employeeId); break;
       case 'set_simulation': result = await service.setSimulation(actor, b.key, b.value); break;
       case 'register_webhook': {
+        // Prefer the production domain: deployment-specific URLs are protected
+        // by Vercel Authentication, which Telegram cannot pass.
+        const prod = process.env.VERCEL_PROJECT_PRODUCTION_URL;
         const proto = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers['x-forwarded-host'] || req.headers.host;
-        result = await service.registerWebhook(actor, `${proto}://${host}`, webhookSecret);
+        result = await service.registerWebhook(actor, prod ? `https://${prod}` : `${proto}://${host}`, webhookSecret);
         break;
       }
+      case 'webhook_info': result = await service.webhookInfo(actor); break;
       case 'reset_all': result = await service.resetAll(actor); break;
       default: return send(res, 400, { ok: false, code: 'invalid', error: 'Unknown action.' });
     }
