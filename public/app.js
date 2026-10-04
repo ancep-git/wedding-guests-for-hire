@@ -51,9 +51,18 @@ async function api(action, params = {}) {
 }
 
 async function load() {
-  const res = await fetch(`/api/state?actor=${encodeURIComponent(role)}`, { cache: 'no-store' });
-  const data = await res.json();
-  if (!data.ok) { toast(data.error, false); return; }
+  let data;
+  try {
+    const res = await fetch(`/api/state?actor=${encodeURIComponent(role)}`, { cache: 'no-store' });
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { data = { ok: false, error: `HTTP ${res.status}: ${text.slice(0, 300)}` }; }
+  } catch (e) {
+    data = { ok: false, error: e.message };
+  }
+  if (!data.ok) {
+    $('#warn').innerHTML = `<div class="banner"><strong>The server could not load the data.</strong><br>${esc(data.error)}<br><span class="small">Check the Vercel environment variables (names and values), redeploy, then refresh this page.</span></div>`;
+    return;
+  }
   state = data;
   render();
 }
